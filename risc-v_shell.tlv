@@ -44,9 +44,9 @@
 
       @1
          // Fetch instruction from program memory
+         $imem_rd_addr[M4_IMEM_INDEX_CNT-1:0] = $pc[M4_IMEM_INDEX_CNT+1:2];
          $imem_rd_en = ! $reset;
-         $imem_rd_addr[31:0] = $pc;
-         $instr[31:0] = $imem_rd_data;
+         $instr[31:0] = $imem_rd_data[31:0];
          
          // Instruction Type Decode (Types U, I, R, S, B, and J)
          $is_u_instr = $instr[6:2] ==? 5'b0x101;
@@ -81,3 +81,4 @@
    m4+cpu_viz(@4)    // For visualisation, argument should be at least equal to the last stage of CPU logic. @4 would work for all labs.
 \SV
    endmodule
+
