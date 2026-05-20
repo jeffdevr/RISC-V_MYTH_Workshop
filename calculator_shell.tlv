@@ -26,10 +26,18 @@
             $quot[31:0] = $val1 / $val2;
 
          @2
-            $out[31:0] = $op[1:0] == 2'd0 ? $sum :
-                         $op[1:0] == 2'd1 ? $diff :
-                         $op[1:0] == 2'd2 ? $prod :
-                                            $quot ;         
+            $out[31:0] = $reset ? '0 :
+                         $op[2:0] == 3'd0 ? $sum :
+                         $op[2:0] == 3'd1 ? $diff :
+                         $op[2:0] == 3'd2 ? $prod :
+                         $op[2:0] == 3'd3 ? $quot :
+                         $op[2:0] == 3'd4 ? >>2$mem :
+                                            '0 ; // ??
+            
+            $mem[31:0] = $reset ? '0 :
+                         $op[2:0] == 3'd5 ? >>2$out :
+                                            >>2$mem ;
+                                            
 
       // Macro instantiations for calculator visualization(disabled by default).
       // Uncomment to enable visualisation, and also,
