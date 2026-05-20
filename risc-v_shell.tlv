@@ -18,7 +18,7 @@
    // Regs:
    //  r10 (a0): In: 0, Out: final sum
    //  r12 (a2): 10
-   //  r13 (a3): 1..10
+   //  r13 (a3): 1..9
    //  r14 (a4): Sum
    // 
    // External to function:
@@ -40,9 +40,22 @@
    |cpu
       @0
          $reset = *reset;
+         $pc[31:0] = >>1$reset ? '0 : >>1$pc + 32'd4;
 
-
-
+      @1
+         // Fetch instruction from program memory
+         $imem_rd_en = ! $reset;
+         $imem_rd_addr[31:0] = $pc;
+         $instr[31:0] = $imem_rd_data;
+         
+         // Instruction Type Decode (Types U, I, R, S, B, and J)
+         $is_u_instr = $instr[6:2] ==? 5'b0x101;
+         $is_i_instr = $instr[6:2] ==? 5'b0000x || $instr[6:2] ==? 5'b001x0 || $instr[6:2] == 5'b11001;
+         $is_r_instr = $instr[6:2] ==? 5'b011x0 || $instr[6:2] ==  5'b01011 || $instr[6:2] == 5'b10100;
+         $is_s_instr = $instr[6:2] ==? 5'b0100x ;
+         $is_b_instr = $instr[6:2] ==  5'b11000 ;
+         $is_j_instr = $instr[6:2] ==  5'b11011 ;
+         
       // YOUR CODE HERE
       // ...
 
@@ -61,10 +74,10 @@
    //  o data memory
    //  o CPU visualization
    |cpu
-      //m4+imem(@1)    // Args: (read stage)
+      m4+imem(@1)    // Args: (read stage)
       //m4+rf(@1, @1)  // Args: (read stage, write stage) - if equal, no register bypass is required
       //m4+dmem(@4)    // Args: (read/write stage)
 
-   //m4+cpu_viz(@4)    // For visualisation, argument should be at least equal to the last stage of CPU logic. @4 would work for all labs.
+   m4+cpu_viz(@4)    // For visualisation, argument should be at least equal to the last stage of CPU logic. @4 would work for all labs.
 \SV
    endmodule
