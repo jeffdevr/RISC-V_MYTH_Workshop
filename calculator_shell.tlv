@@ -11,24 +11,25 @@
    |calc
       @0
          $reset = *reset;
+                  
+      @1 
+         $valid = $reset ? 0 : (1 + >>1$valid);
          
-      @1
-         $val1[31:0] = >>2$out;     // use previous output
-         $val2[31:0] = $rand2[3:0]; // just use 4 bits for 0-15
+      ?$valid
+         @1
+            $val1[31:0] = >>2$out;     // use previous output
+            $val2[31:0] = $rand2[3:0]; // just use 4 bits for 0-15
 
-         $sum[31:0]  = $val1 + $val2;
-         $diff[31:0] = $val1 - $val2;
-         $prod[31:0] = $val1 * $val2;
-         $quot[31:0] = $val1 / $val2;
+            $sum[31:0]  = $val1 + $val2;
+            $diff[31:0] = $val1 - $val2;
+            $prod[31:0] = $val1 * $val2;
+            $quot[31:0] = $val1 / $val2;
 
-         $valid = $reset ? 0 : (1 +  >>1$valid) ;
-                               
-      @2
-         $out[31:0] = ($reset || ~$valid) ? 32'd0 :
-                      $op[1:0] == 2'd0 ? $sum :
-                      $op[1:0] == 2'd1 ? $diff :
-                      $op[1:0] == 2'd2 ? $prod :
-                                         $quot ;         
+         @2
+            $out[31:0] = $op[1:0] == 2'd0 ? $sum :
+                         $op[1:0] == 2'd1 ? $diff :
+                         $op[1:0] == 2'd2 ? $prod :
+                                            $quot ;         
 
       // Macro instantiations for calculator visualization(disabled by default).
       // Uncomment to enable visualisation, and also,
