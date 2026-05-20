@@ -45,7 +45,7 @@
       @1
          // Fetch instruction from program memory
          $imem_rd_en = ! $reset;
-         $imem_rd_addr[M4_IMEM_INDEX_CNT-1:0] = $pc[M4_IMEM_INDEX_CNT+1:2];
+         $imem_rd_addr[M4_IMEM_INDEX_CNT-1:0] = $pc[M4_IMEM_INDEX_CNT+1:2]; // instruction memory is word-address, not byte address, ignore bottom 2 bits
          $instr[31:0] = $imem_rd_data[31:0];
          
          // Instruction Type Decode (Types U, I, R, S, B, and J)
@@ -56,20 +56,33 @@
          $is_b_instr = $instr[6:2] ==  5'b11000 ;
          $is_j_instr = $instr[6:2] ==  5'b11011 ;
          
-         // Extract immediate value
-         $imm[31:0] = $is_i_instr ? { {21{$instr[31]}}, $instr[30:20] } :
-                      $is_s_instr ? { {21{$instr[31]}}, $instr[30:25], $instr[11:8], $instr[7] } :
-                      $is_b_instr ? { {20{$instr[31]}}, $instr[7], $instr[30:25], $instr[11:8], 1'b0 } :
-                      $is_u_instr ? { $instr[31:12] , 12'd0 } :
-                      $is_j_instr ? { {12{$instr[31]}}, $instr[19:12], $instr[20], $instr[30:21], 1'b0 } :
-                                    32'd0 ;
-         // Extract Additional Instruction Fields funct3, funct7, rs1, rs2, rd, opcode, imm
-         $funct3[2:0] = $instr[14:12];
-         $funct7[6:0] = $instr[31:25];
-         $rs1[4:0]    = $instr[19:15];
-         $rs2[4:0]    = $instr[24:20];
-         $rd[4:0]     = $instr[11:7];
-         $opcode[6:0] = $instr[6:0];
+         // Determine when additional instruction fields are valid based on instruction type
+         $funct3_valid = $is_r_instr || $is_i_instr || $is_s_instr || $is_b_instr;
+         $funct7_valid = $is_r_instr;
+         $rs1_valid = $is_r_instr || $is_i_instr || $is_s_instr || $is_b_instr;
+         $rs2_valid = $is_r_instr || $is_s_instr || $is_b_instr;
+         $rd_valid = $is_r_instr || $is_i_instr || $is_u_instr || $is_j_instr;
+         $imm_valid = $is_i_instr || $is_s_instr || $is_b_instr || $is_u_instr || $is_j_instr;
+         
+         // Extract additional fields funct3, funct7, rs1, rs2, rd, opcode, imm only when valid
+         ?$funct3_valid
+            $funct3[2:0] = $instr[14:12];
+         ?$funct7_valid
+            $funct7[6:0] = $instr[31:25];
+         ?$rs1_valid
+            $rs1[4:0]    = $instr[19:15];
+         ?$rs2_valid
+            $rs2[4:0]    = $instr[24:20];
+         ?$rd_valid
+            $rd[4:0]     = $instr[11:7];
+         ?$imm_valid
+            $imm[31:0]   = $is_i_instr ? { {21{$instr[31]}}, $instr[30:20] } :
+                           $is_s_instr ? { {21{$instr[31]}}, $instr[30:25], $instr[11:8], $instr[7] } :
+                           $is_b_instr ? { {20{$instr[31]}}, $instr[7], $instr[30:25], $instr[11:8], 1'b0 } :
+                           $is_u_instr ? { $instr[31:12] , 12'd0 } :
+                           $is_j_instr ? { {12{$instr[31]}}, $instr[19:12], $instr[20], $instr[30:21], 1'b0 } :
+                                         32'd0 ;
+         $opcode[6:0] = $instr[6:0]; // opcode is always valid
 
       // YOUR CODE HERE
       // ...
