@@ -125,7 +125,7 @@
          $rf_rd_en2 = $rs2_valid;                  // rs2 (read)
          $rf_rd_index2[4:0] = $rs2[4:0];
          $src2_value[31:0] = $rf_rd_data2[31:0];
-         $rf_wr_en = $rd_valid;                    // rd (write)
+         $rf_wr_en = $rd_valid && $rd[4:0] != 5'd0;     // rd (write, if rd != 0)
          $rf_wr_index[4:0] = $rd[4:0];
          $rf_wr_data[31:0] = $result[31:0];
          
