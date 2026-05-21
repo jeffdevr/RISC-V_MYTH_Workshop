@@ -137,10 +137,13 @@
          // Enable register file and assert read signals
          $rf_rd_en1 = $rs1_valid;                  // rs1 (read)
          $rf_rd_index1[4:0] = $rs1[4:0];
-         $src1_value[31:0] = $rf_rd_data1[31:0];
+         $src1_value[31:0] = (>>1$rf_wr_en && >>1$rf_wr_index == $rf_rd_index1) ? >>1$result :
+                             $rf_rd_data1[31:0];
+         
          $rf_rd_en2 = $rs2_valid;                  // rs2 (read)
          $rf_rd_index2[4:0] = $rs2[4:0];
-         $src2_value[31:0] = $rf_rd_data2[31:0];
+         $src2_value[31:0] = (>>1$rf_wr_en && >>1$rf_wr_index == $rf_rd_index2) ? >>1$result :
+                             $rf_rd_data2[31:0];
 
       @3
          // ALU operations based on instruction type (just ADD and ADDI for now)
