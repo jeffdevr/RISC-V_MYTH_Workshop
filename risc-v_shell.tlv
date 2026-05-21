@@ -43,6 +43,8 @@
          $pc[31:0] = >>1$reset ? '0 :
                      >>1$taken_br ? >>1$br_tgt_pc :
                      >>1$pc + 32'd4;
+         $start = >>1$reset && !$reset;
+         $valid = $start ? 1 : >>3$valid;
 
       @1
          // Fetch instruction from program memory
