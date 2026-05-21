@@ -125,18 +125,27 @@
          $rf_rd_en2 = $rs2_valid;                  // rs2 (read)
          $rf_rd_index2[4:0] = $rs2[4:0];
          $src2_value[31:0] = $rf_rd_data2[31:0];
-         $rf_wr_en = $rd_valid && $rd[4:0] != 5'd0;     // rd (write, if rd != 0)
-         $rf_wr_index[4:0] = $rd[4:0];
-         $rf_wr_data[31:0] = $result[31:0];
+
          
          // ALU operations based on instruction type (just ADD and ADDI for now)
          $result[31:0] = $is_addi ? $src1_value + $imm :
                          $is_add  ? $src1_value + $src2_value :
                                     '0 ;
-                                   
-      // YOUR CODE HERE
-      // ...
-
+         
+         // Write to register file if Rd is valid and not equal to zero
+         $rf_wr_en = $rd_valid && $rd[4:0] != 5'd0; // rd (write, if rd != 0)
+         $rf_wr_index[4:0] = $rd[4:0];
+         $rf_wr_data[31:0] = $result[31:0];
+         
+         // Branch Processing
+         $taken_br = $is_beq  ?  ($src1_value == $src2_value) : 
+                     $is_bne  ?  ($src1_value != $src2_value) :
+                     $is_blt  ? (($src1_value <  $src2_value) ^ ($src1_value[31] != $src2_value[31])) :
+                     $is_bge  ? (($src1_value >= $src2_value) ^ ($src1_value[31] != $src2_value[31])) :
+                     $is_bltu ?  ($src1_value <  $src2_value) :
+                     $is_bgeu ?  ($src1_value >= $src2_value) :
+                                1'b0 ; 
+         
       // Note: Because of the magic we are using for visualisation, if visualisation is enabled below,
       //       be sure to avoid having unassigned signals (which you might be using for random inputs)
       //       other than those specifically expected in the labs. You'll get strange errors for these.
