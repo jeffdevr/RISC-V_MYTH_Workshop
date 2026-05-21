@@ -126,6 +126,11 @@
          $rf_rd_index2[4:0] = $rs2[4:0];
          $src2_value[31:0] = $rf_rd_data2[31:0];
          
+         // ALU operations based on instruction type (just ADD and ADDI for now)
+         $result[31:0] = $is_addi ? $src1_value + $imm :
+                         $is_add  ? $src1_value + $src2_value :
+                                    '0 ;
+                                   
       // YOUR CODE HERE
       // ...
 
