@@ -41,8 +41,8 @@
       @0
          $reset = *reset;
          $pc[31:0] = >>1$reset ? '0 :
-                     >>1$taken_br ? >>1$br_tgt_pc :
-                     >>1$inc_pc;
+                     >>3$valid_taken_br ? >>3$br_tgt_pc :
+                     >>3$inc_pc;
          $start = >>1$reset && !$reset;
          $valid = $reset ? 0 : $start ? 1 : >>3$valid;
 
@@ -66,10 +66,12 @@
          // Determine when additional instruction fields are valid based on instruction type
          $funct3_valid = $is_r_instr || $is_i_instr || $is_s_instr || $is_b_instr;
          $funct7_valid = $is_r_instr;
-         $rs1_valid = $is_r_instr || $is_i_instr || $is_s_instr || $is_b_instr;
-         $rs2_valid = $is_r_instr || $is_s_instr || $is_b_instr;
-         $rd_valid = $is_r_instr || $is_i_instr || $is_u_instr || $is_j_instr;
-         $imm_valid = $is_i_instr || $is_s_instr || $is_b_instr || $is_u_instr || $is_j_instr;
+         $rs1_valid    = $is_r_instr || $is_i_instr || $is_s_instr || $is_b_instr;
+         $rs2_valid    = $is_r_instr || $is_s_instr || $is_b_instr;
+         $rd_valid     = $is_r_instr || $is_i_instr || $is_u_instr || $is_j_instr;
+         $imm_valid    = $is_i_instr || $is_s_instr || $is_b_instr || $is_u_instr || $is_j_instr;
+         $opcode_valid = $is_u_instr || $is_i_instr || $is_r_instr || 
+                         $is_s_instr || $is_b_instr || $is_j_instr;
          
          // Extract additional fields funct3, funct7, rs1, rs2, rd, opcode, imm only when valid
          ?$funct3_valid
@@ -89,7 +91,8 @@
                            $is_u_instr ? { $instr[31:12] , 12'd0 } :
                            $is_j_instr ? { {12{$instr[31]}}, $instr[19:12], $instr[20], $instr[30:21], 1'b0 } :
                                          32'd0 ;
-         $opcode[6:0] = $instr[6:0]; // opcode is always valid
+         ?$opcode_valid
+            $opcode[6:0] = $instr[6:0];
          
          // Opcode Decode
          $dec_bits[10:0] = {$funct7[5],$funct3,$opcode};
@@ -140,7 +143,7 @@
                                     '0 ;
          
          // Write to register file if Rd is valid and not equal to zero
-         $rf_wr_en = $rd_valid && $rd[4:0] != 5'd0; // rd (write, if rd != 0)
+         $rf_wr_en = $valid && $rd_valid && $rd[4:0] != 5'd0; // rd (write, if rd != 0)
          $rf_wr_index[4:0] = $rd[4:0];
          $rf_wr_data[31:0] = $result[31:0];
          
@@ -152,6 +155,7 @@
                      $is_bltu ?  ($src1_value <  $src2_value) :
                      $is_bgeu ?  ($src1_value >= $src2_value) :
                                 1'b0 ;
+         $valid_taken_br = $valid && $taken_br;
          $br_tgt_pc[31:0] = $pc + $imm;
          
          
