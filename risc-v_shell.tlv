@@ -42,9 +42,9 @@
          $reset = *reset;
          $pc[31:0] = >>1$reset ? '0 :
                      >>3$valid_taken_br ? >>3$br_tgt_pc :
-                     >>3$inc_pc;
-         $start = >>1$reset && !$reset;
-         $valid = $reset ? 0 : $start ? 1 : >>3$valid;
+                     >>1$inc_pc;
+         //$start = >>1$reset && !$reset;
+         //$valid = $reset ? 0 : $start ? 1 : >>3$valid;
 
          // Present PC to instruction memory
          $imem_rd_en = ! $reset;
@@ -137,12 +137,12 @@
          // Enable register file and assert read signals
          $rf_rd_en1 = $rs1_valid;                  // rs1 (read)
          $rf_rd_index1[4:0] = $rs1[4:0];
-         $src1_value[31:0] = (>>1$rf_wr_en && >>1$rf_wr_index == $rf_rd_index1) ? >>1$result :
+         $src1_value[31:0] = (>>1$rf_wr_en && >>1$rf_wr_index == $rs1) ? >>1$result :
                              $rf_rd_data1[31:0];
          
          $rf_rd_en2 = $rs2_valid;                  // rs2 (read)
          $rf_rd_index2[4:0] = $rs2[4:0];
-         $src2_value[31:0] = (>>1$rf_wr_en && >>1$rf_wr_index == $rf_rd_index2) ? >>1$result :
+         $src2_value[31:0] = (>>1$rf_wr_en && >>1$rf_wr_index == $rs2) ? >>1$result :
                              $rf_rd_data2[31:0];
 
       @3
@@ -159,6 +159,9 @@
                      $is_bgeu ?  ($src1_value >= $src2_value) :
                                 1'b0 ;
 
+         // If neither of the the previous two instructions was a taken branch, 
+         // then this is a (potential) valid branch
+         $valid = !(>>1$valid_taken_br || >>2$valid_taken_br);
          $valid_taken_br = $valid && $taken_br;
                      
          // Present write signals to register file if Rd is valid and not equal to zero
