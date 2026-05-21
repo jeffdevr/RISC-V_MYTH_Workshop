@@ -121,8 +121,10 @@
          // Enable register file and connect to signals
          $rf_rd_en1 = $rs1_valid;
          $rf_rd_index1[4:0] = $rs1[4:0];
+         $src1_value[31:0] = $rf_rd_data1[31:0];
          $rf_rd_en2 = $rs2_valid;
          $rf_rd_index2[4:0] = $rs2[4:0];
+         $src2_value[31:0] = $rf_rd_data2[31:0];
          
       // YOUR CODE HERE
       // ...
