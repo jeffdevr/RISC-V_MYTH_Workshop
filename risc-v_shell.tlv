@@ -46,14 +46,16 @@
          $start = >>1$reset && !$reset;
          $valid = $reset ? 0 : $start ? 1 : >>3$valid;
 
-      @1
-         // Next PC
-         $inc_pc[31:0] = $pc + 32'd4; // increment by 4; next word-aligned byte address
-         
-         // Fetch instruction from program memory
+         // Present PC to instruction memory
          $imem_rd_en = ! $reset;
          $imem_rd_addr[M4_IMEM_INDEX_CNT-1:0] = $pc[M4_IMEM_INDEX_CNT+1:2]; // instruction memory is word-address, not byte address, ignore bottom 2 bits
+
+      @1
+         // Receive instruction from program memory
          $instr[31:0] = $imem_rd_data[31:0];
+
+         // Next PC
+         $inc_pc[31:0] = $pc + 32'd4; // increment by 4; next word-aligned byte address
          
          // Instruction Type Decode (Types U, I, R, S, B, and J)
          $is_u_instr = $instr[6:2] ==? 5'b0x101;
@@ -128,7 +130,11 @@
          $is_load  = $opcode   ==  7'b0000011 && ($funct3 == 3'b000 || $funct3 == 3'b001 || $funct3 == 3'b010 || 
                                                   $funct3 == 3'b100 || $funct3 == 3'b101);
 
-         // Enable register file and connect to signals
+      @2
+         // Calculate possible branch target
+         $br_tgt_pc[31:0] = $pc + $imm;
+         
+         // Enable register file and assert read signals
          $rf_rd_en1 = $rs1_valid;                  // rs1 (read)
          $rf_rd_index1[4:0] = $rs1[4:0];
          $src1_value[31:0] = $rf_rd_data1[31:0];
@@ -136,18 +142,12 @@
          $rf_rd_index2[4:0] = $rs2[4:0];
          $src2_value[31:0] = $rf_rd_data2[31:0];
 
-         
+      @3
          // ALU operations based on instruction type (just ADD and ADDI for now)
          $result[31:0] = $is_addi ? $src1_value + $imm :
                          $is_add  ? $src1_value + $src2_value :
                                     '0 ;
-         
-         // Write to register file if Rd is valid and not equal to zero
-         $rf_wr_en = $valid && $rd_valid && $rd[4:0] != 5'd0; // rd (write, if rd != 0)
-         $rf_wr_index[4:0] = $rd[4:0];
-         $rf_wr_data[31:0] = $result[31:0];
-         
-         // Branch Processing
+         // Branch Condition Evaluation
          $taken_br = $is_beq  ?  ($src1_value == $src2_value) : 
                      $is_bne  ?  ($src1_value != $src2_value) :
                      $is_blt  ? (($src1_value <  $src2_value) ^ ($src1_value[31] != $src2_value[31])) :
@@ -155,10 +155,18 @@
                      $is_bltu ?  ($src1_value <  $src2_value) :
                      $is_bgeu ?  ($src1_value >= $src2_value) :
                                 1'b0 ;
+
          $valid_taken_br = $valid && $taken_br;
-         $br_tgt_pc[31:0] = $pc + $imm;
+                     
+         // Present write signals to register file if Rd is valid and not equal to zero
+         $rf_wr_en = $valid && $rd_valid && $rd[4:0] != 5'd0; // rd (write, if rd != 0)
+         $rf_wr_index[4:0] = $rd[4:0];
+
+      @4
+         // Present result from ALU for write to register file
+         $rf_wr_data[31:0] = $result[31:0];         
          
-         
+
       // Note: Because of the magic we are using for visualisation, if visualisation is enabled below,
       //       be sure to avoid having unassigned signals (which you might be using for random inputs)
       //       other than those specifically expected in the labs. You'll get strange errors for these.
@@ -175,7 +183,7 @@
    //  o CPU visualization
    |cpu
       m4+imem(@1)    // Args: (read stage)
-      m4+rf(@1, @1)  // Args: (read stage, write stage) - if equal, no register bypass is required
+      m4+rf(@2, @4)  // Args: (read stage, write stage) - if equal, no register bypass is required
       //m4+dmem(@4)    // Args: (read/write stage)
 
    m4+cpu_viz(@4)    // For visualisation, argument should be at least equal to the last stage of CPU logic. @4 would work for all labs.
