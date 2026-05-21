@@ -42,11 +42,14 @@
          $reset = *reset;
          $pc[31:0] = >>1$reset ? '0 :
                      >>1$taken_br ? >>1$br_tgt_pc :
-                     >>1$pc + 32'd4;
+                     >>1$inc_pc;
          $start = >>1$reset && !$reset;
-         $valid = $start ? 1 : >>3$valid;
+         $valid = $reset ? 0 : $start ? 1 : >>3$valid;
 
       @1
+         // Next PC
+         $inc_pc[31:0] = $pc + 32'd4; // increment by 4; next word-aligned byte address
+         
          // Fetch instruction from program memory
          $imem_rd_en = ! $reset;
          $imem_rd_addr[M4_IMEM_INDEX_CNT-1:0] = $pc[M4_IMEM_INDEX_CNT+1:2]; // instruction memory is word-address, not byte address, ignore bottom 2 bits
@@ -158,7 +161,7 @@
 
    
    // Assert these to end simulation (before Makerchip cycle limit).
-   *passed = |cpu/xreg[10]>>5$value == (1+2+3+4+5+6+7+8+9);
+   *passed = |cpu/xreg[10]>>4$value == (1+2+3+4+5+6+7+8+9);
    *failed = 1'b0;
    
    // Macro instantiations for:
