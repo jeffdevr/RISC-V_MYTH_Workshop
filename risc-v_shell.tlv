@@ -115,9 +115,15 @@
          $is_sra   = $dec_bits ==  11'b1_101_0110011;
          $is_or    = $dec_bits ==  11'b0_110_0110011;
          $is_and   = $dec_bits ==  11'b0_111_0110011;
-         $is_load  = $opcode   == 7'b0000011 && ($funct3 == 3'b000 || $funct3 == 3'b001 || $funct3 == 3'b010 || 
-                                                 $funct3 == 3'b100 || $funct3 == 3'b101);
+         $is_load  = $opcode   ==  7'b0000011 && ($funct3 == 3'b000 || $funct3 == 3'b001 || $funct3 == 3'b010 || 
+                                                  $funct3 == 3'b100 || $funct3 == 3'b101);
 
+         // Enable register file and connect to signals
+         $rf_rd_en1 = $rs1_valid;
+         $rf_rd_index1[4:0] = $rs1[4:0];
+         $rf_rd_en2 = $rs2_valid;
+         $rf_rd_index2[4:0] = $rs2[4:0];
+         
       // YOUR CODE HERE
       // ...
 
@@ -137,7 +143,7 @@
    //  o CPU visualization
    |cpu
       m4+imem(@1)    // Args: (read stage)
-      //m4+rf(@1, @1)  // Args: (read stage, write stage) - if equal, no register bypass is required
+      m4+rf(@1, @1)  // Args: (read stage, write stage) - if equal, no register bypass is required
       //m4+dmem(@4)    // Args: (read/write stage)
 
    m4+cpu_viz(@4)    // For visualisation, argument should be at least equal to the last stage of CPU logic. @4 would work for all labs.
