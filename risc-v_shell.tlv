@@ -42,6 +42,7 @@
          $reset = *reset;
          $pc[31:0] = >>1$reset ? '0 :
                      >>3$valid_taken_br ? >>3$br_tgt_pc :
+                     >>3$valid_load     ? >>3$inc_pc :
                      >>1$inc_pc;
 
          // Present PC to instruction memory
@@ -194,10 +195,14 @@
 
          // Was a branch taken during a valid state?
          $valid_taken_br = $valid && $taken_br;
+         
+         // Was a load instruction issued during a valid state?
+         $valid_load = $valid && $is_load;
 
-         // If neither of the the previous two instructions was a taken branch, 
+         // If neither of the the previous two instructions was a taken branch or a load, 
          // then we are in a valid state
-         $valid = !(>>1$valid_taken_br || >>2$valid_taken_br);
+         $valid = !(>>1$valid_taken_br || >>2$valid_taken_br || 
+                    >>1$valid_load     || >>2$valid_load );
             
          // Present write signals to register file if Rd is valid and not equal to zero
          $rf_wr_en = $valid && $rd_valid && $rd != '0; // rd (write, if rd != 0)
