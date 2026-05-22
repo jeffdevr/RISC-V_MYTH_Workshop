@@ -206,8 +206,17 @@
             
          // Present write signals to register file if Rd is valid and not equal to zero
          $rf_wr_en = $valid && $rd_valid && $rd != '0; // rd (write, if rd != 0)
-         $rf_wr_index[4:0] = $rd;
-         $rf_wr_data[31:0] = $result;
+         $rf_wr_index[4:0] = >>2$valid_load ? >>2$rd : $rd;
+         $rf_wr_data[31:0] = >>2$valid_load ? >>2$ld_data : $result;
+
+      @4
+         $dmem_wr_en = $valid && $is_s_instr; // only enable memory write for valid store instructions
+         $dmem_rd_en = $is_load; // enable memore read for load instructions
+         $dmem_wr_data[31:0] = $src2_value;
+         $dmem_addr[3:0] = $result[5:2]; // dmem is only 16 words, indexed by word, not by byte
+      
+      @5
+         $ld_data[31:0] = $dmem_rd_data;
          
       // Note: Because of the magic we are using for visualisation, if visualisation is enabled below,
       //       be sure to avoid having unassigned signals (which you might be using for random inputs)
@@ -226,7 +235,7 @@
    |cpu
       m4+imem(@1)    // Args: (read stage)
       m4+rf(@2, @3)  // Args: (read stage, write stage) - if equal, no register bypass is required
-      // m4+dmem(@4)    // Args: (read/write stage)
+      m4+dmem(@4)    // Args: (read/write stage)
 
    m4+cpu_viz(@4)    // For visualisation, argument should be at least equal to the last stage of CPU logic. @4 would work for all labs.
 \SV
