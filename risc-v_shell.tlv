@@ -45,6 +45,8 @@
          $pc[31:0] = >>1$reset ? '0 :
                      >>3$valid_taken_br ? >>3$br_tgt_pc :
                      >>3$valid_load     ? >>3$inc_pc :
+                     >>3$is_jal  && >>3$valid_jump ? >>3$br_tgt_pc :
+                     >>3$is_jalr && >>3$valid_jump ? >>3$jalr_tgt_pc :
                      >>1$inc_pc;
 
          // Present PC to instruction memory
@@ -203,10 +205,16 @@
          // Was a load instruction issued during a valid state?
          $valid_load = $valid && $is_load;
 
+         // Was a JAL/JALR instruction issued during a valid state?
+         $is_jump = $is_jal || $is_jalr;
+         $valid_jump = $valid && $is_jump;
+         $jalr_tgt_pc[31:0] = $src1_value + $imm;
+         
          // If neither of the the previous two instructions was a taken branch or a load, 
          // then we are in a valid state
          $valid = !(>>1$valid_taken_br || >>2$valid_taken_br || 
-                    >>1$valid_load     || >>2$valid_load );
+                    >>1$valid_load     || >>2$valid_load     || 
+                    >>1$valid_jump     || >>2$valid_jump );
             
          // Present write signals to register file if Rd is valid and not equal to zero
          $rf_wr_en = $valid && $rd_valid && $rd != '0; // rd (write, if rd != 0)
