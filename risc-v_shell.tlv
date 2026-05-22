@@ -43,8 +43,6 @@
          $pc[31:0] = >>1$reset ? '0 :
                      >>3$valid_taken_br ? >>3$br_tgt_pc :
                      >>1$inc_pc;
-         //$start = >>1$reset && !$reset;
-         //$valid = $reset ? 0 : $start ? 1 : >>3$valid;
 
          // Present PC to instruction memory
          $imem_rd_en = ! $reset;
@@ -75,6 +73,7 @@
          $rd_valid     = $is_r_instr || $is_i_instr || $is_u_instr || $is_j_instr;
          $opcode_valid = $is_u_instr || $is_i_instr || $is_r_instr || 
                          $is_s_instr || $is_b_instr || $is_j_instr;
+         $imm_valid    = $is_i_instr || $is_s_instr || $is_b_instr || $is_u_instr || $is_j_instr;
          
          // Extract additional fields funct3, funct7, rs1, rs2, rd, opcode only when valid
          ?$funct3_valid
@@ -89,13 +88,13 @@
             $rd[4:0]     = $instr[11:7];
          ?$opcode_valid
             $opcode[6:0] = $instr[6:0];         
-            
-         $imm[31:0] = $is_i_instr ? { {21{$instr[31]}}, $instr[30:20] } :
-                      $is_s_instr ? { {21{$instr[31]}}, $instr[30:25], $instr[11:8], $instr[7] } :
-                      $is_b_instr ? { {20{$instr[31]}}, $instr[7], $instr[30:25], $instr[11:8], 1'b0 } :
-                      $is_u_instr ? { $instr[31:12] , 12'd0 } :
-                      $is_j_instr ? { {12{$instr[31]}}, $instr[19:12], $instr[20], $instr[30:21], 1'b0 } :
-                                    32'd0 ;
+         ?$imm_valid
+            $imm[31:0] = $is_i_instr ? { {21{$instr[31]}}, $instr[30:20] } :
+                         $is_s_instr ? { {21{$instr[31]}}, $instr[30:25], $instr[11:8], $instr[7] } :
+                         $is_b_instr ? { {20{$instr[31]}}, $instr[7], $instr[30:25], $instr[11:8], 1'b0 } :
+                         $is_u_instr ? { $instr[31:12] , 12'd0 } :
+                         $is_j_instr ? { {12{$instr[31]}}, $instr[19:12], $instr[20], $instr[30:21], 1'b0 } :
+                                       '0 ;
          
          // Opcode Decode
          $dec_bits[10:0] = {$funct7[5],$funct3,$opcode};
@@ -222,7 +221,7 @@
    |cpu
       m4+imem(@1)    // Args: (read stage)
       m4+rf(@2, @3)  // Args: (read stage, write stage) - if equal, no register bypass is required
-      //m4+dmem(@4)    // Args: (read/write stage)
+      // m4+dmem(@4)    // Args: (read/write stage)
 
    m4+cpu_viz(@4)    // For visualisation, argument should be at least equal to the last stage of CPU logic. @4 would work for all labs.
 \SV
