@@ -206,8 +206,7 @@
          $valid_load = $valid && $is_load;
 
          // Was a JAL/JALR instruction issued during a valid state?
-         $is_jump = $is_jal || $is_jalr;
-         $valid_jump = $valid && $is_jump;
+         $valid_jump = $valid && ($is_jal || $is_jalr);
          $jalr_tgt_pc[31:0] = $src1_value + $imm;
          
          // If neither of the the previous two instructions was a taken branch or a load, 
@@ -217,7 +216,7 @@
                     >>1$valid_jump     || >>2$valid_jump );
             
          // Present write signals to register file if Rd is valid and not equal to zero
-         $rf_wr_en = $valid && $rd_valid && $rd != '0; // rd (write, if rd != 0)
+         $rf_wr_en = (>>2$valid_load && >>2$rd != '0) || ($valid && $rd_valid && $rd != '0); // rd (write, if rd != 0)
          $rf_wr_index[4:0] = >>2$valid_load ? >>2$rd : $rd;
          $rf_wr_data[31:0] = >>2$valid_load ? >>2$ld_data : $result;
 
