@@ -216,9 +216,9 @@
                     >>1$valid_jump     || >>2$valid_jump );
             
          // Present write signals to register file if Rd is valid and not equal to zero
-         $rf_wr_en = (>>2$valid_load && >>2$rd != '0) || ($valid && $rd_valid && $rd != '0); // rd (write, if rd != 0)
-         $rf_wr_index[4:0] = >>2$valid_load ? >>2$rd : $rd;
-         $rf_wr_data[31:0] = >>2$valid_load ? >>2$ld_data : $result;
+         $rf_wr_en = (>>2$valid_load && >>2$rd != '0) || ($valid && $rd_valid && $rd != '0 && !$is_load); // rd (write, if rd != 0)
+         $rf_wr_index[4:0] = $valid ? $rd     : >>2$rd;
+         $rf_wr_data[31:0] = $valid ? $result : >>2$ld_data;
 
       @4
          $dmem_wr_en = $valid && $is_s_instr; // only enable memory write for valid store instructions
