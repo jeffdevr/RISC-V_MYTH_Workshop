@@ -22,8 +22,6 @@
    //  r14 (a4): Sum
    // 
    // External to function:
-   m4_asm(SW,  r0, r10, 100)
-   m4_asm(LW,  r15, r0, 100)
    m4_asm(ADD, r10, r0, r0)             // Initialize r10 (a0) to 0.
    // Function:
    m4_asm(ADD, r14, r10, r0)            // Initialize sum register a4 with 0x0
@@ -36,9 +34,9 @@
    m4_asm(ADD, r10, r14, r0)            // Store final result to register a0 so that it can be read by main program
    m4_asm(SW,  r0, r10, 100)
    m4_asm(LW,  r15, r0, 100)
-   
    // Optional:
-   // m4_asm(JAL, r7, 00000000000000000000) // Done. Jump to itself (infinite loop). (Up to 20-bit signed immediate plus implicit 0 bit (unlike JALR) provides byte address; last immediate bit should also be 0)
+   m4_asm(JAL, r7, 00000000000000000000) // Done. Jump to itself (infinite loop). (Up to 20-bit signed immediate plus implicit 0 bit (unlike JALR) provides byte address; last immediate bit should also be 0)
+
    m4_define_hier(['M4_IMEM'], M4_NUM_INSTRS)
 
    |cpu
@@ -56,7 +54,7 @@
          $imem_rd_addr[M4_IMEM_INDEX_CNT-1:0] = $pc[M4_IMEM_INDEX_CNT+1:2]; // instruction memory is word-address, not byte address, ignore bottom 2 bits
 
       @1
-         *passed = |cpu/xreg[15]>>4$value == (1+2+3+4+5+6+7+8+9);  // early termination if we get it right
+         *passed = |cpu/xreg[15]>>6$value == (1+2+3+4+5+6+7+8+9);  // early termination if we get it right
          
          // Receive instruction from program memory
          $instr[31:0] = $imem_rd_data[31:0];
@@ -253,4 +251,5 @@
    m4+cpu_viz(@4)    // For visualisation, argument should be at least equal to the last stage of CPU logic. @4 would work for all labs.
 \SV
    endmodule
+
 
